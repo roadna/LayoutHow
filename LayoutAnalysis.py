@@ -57,7 +57,7 @@ class Analyze:
             heat_map = self.heat_map(layout)
         grading_scale = np.array([[5,   2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
                                   [1.5, 1, 1, 1, 3,   3,   1, 1, 1, 1.5],
-                                  [4.5, 4, 3, 2, 4,   4,   2, 3, 4, 4.5]])
+                                  [4.5, 4, 3, 2, 4,   4,   2, 3, 4, 4.5]])  # everyone has its preference
         grade_matrix = heat_map * grading_scale
         grades = 0
         for row in range(3):
