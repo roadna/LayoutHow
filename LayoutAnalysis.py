@@ -63,4 +63,25 @@ class Analyze:
         for row in range(3):
             for col in range(10):
                 grades += grade_matrix[row][col]
-        return grade_matrix, grades
+        return grades
+
+    @staticmethod
+    def get_index(layout):
+        index = {}
+        for row in range(0, 3):
+            for col in range(0, 10):
+                if layout[row][col] != " ":
+                    index[layout[row][col]] = (row, col)
+        return index
+
+    def grade_string(self, string, layout):
+
+        index = self.get_index(layout)
+        grading_scale = np.array([[5, 2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
+                                  [1.5, 1, 1, 1, 3, 3, 1, 1, 1, 1.5],
+                                  [4.5, 4, 3, 2, 4, 4, 2, 3, 4, 4.5]])
+        grade = 0
+        for char in string:
+            if char != " ":
+                grade += grading_scale[index[char][0]][index[char][1]]
+        return grade
