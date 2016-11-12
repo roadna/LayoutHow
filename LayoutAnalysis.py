@@ -75,7 +75,6 @@ class Analyze:
         return index
 
     def grade_string(self, string, layout):
-
         index = self.get_index(layout)
         grading_scale = np.array([[5, 2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
                                   [1.5, 1, 1, 1, 3, 3, 1, 1, 1, 1.5],
