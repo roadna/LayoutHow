@@ -1,4 +1,5 @@
 import numpy as np
+SQRT2 = 2 ** 0.5
 
 
 class Analyze:
@@ -6,9 +7,15 @@ class Analyze:
     text_length = 0
     letter_count = {}
     letter_freq = {}
+    distance_scale = np.array([[1, 1, 1, 1, SQRT2, SQRT2, 1, 1, 1, 1],
+                               [0, 0, 0, 0, 1,         1, 0, 0, 0, 0],
+                               [1, 1, 1, 1, SQRT2, SQRT2, 1, 1, 1, 1]])  # 19mm between each key
+    grading_scale = np.array([[5,  2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
+                             [1.5, 1, 1, 1, 3,     3, 1, 1, 1, 1.5],
+                             [4.5, 4, 3, 2, 4,     4, 2, 3, 4, 4.5]])
 
     def __init__(self, filename):
-        self.text = open(filename, 'r').read().replace(" ", "").lower()
+        self.text = open(filename, 'r').read().lower()
         self.text_length = len(self.text)
         for ascii_code in range(ord("a"), ord("z") + 1):
             counter_result = self.text.count(chr(ascii_code))
@@ -25,6 +32,14 @@ class Analyze:
                 if ord("a") <= ord(layout[row][col]) <= ord("z"):
                     h_map[row][col] = self.letter_freq[layout[row][col]]
         return h_map
+
+    def distances(self, layout):
+        distances = 0
+        for row in range(0, 3):
+            for col in range(0, 10):
+                if ord("a") <= ord(layout[row][col]) <= ord("z"):
+                    distances += self.distance_scale[row][col] * self.letter_count[layout[row][col]]
+        return distances * 19 / 1000  # meters
 
     def finger_usage(self, layout, heat_map=None):
         if heat_map is None:
@@ -55,10 +70,7 @@ class Analyze:
     def grade(self, layout, heat_map=None):
         if heat_map is None:
             heat_map = self.heat_map(layout)
-        grading_scale = np.array([[5,   2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
-                                  [1.5, 1, 1, 1, 3,   3,   1, 1, 1, 1.5],
-                                  [4.5, 4, 3, 2, 4,   4,   2, 3, 4, 4.5]])  # everyone has its preference
-        grade_matrix = heat_map * grading_scale
+        grade_matrix = heat_map * self.grading_scale
         grades = 0
         for row in range(3):
             for col in range(10):
@@ -76,11 +88,37 @@ class Analyze:
 
     def grade_string(self, string, layout):
         index = self.get_index(layout)
-        grading_scale = np.array([[5, 2, 2, 3, 4.5, 4.5, 3, 2, 2, 5],
-                                  [1.5, 1, 1, 1, 3, 3, 1, 1, 1, 1.5],
-                                  [4.5, 4, 3, 2, 4, 4, 2, 3, 4, 4.5]])
         grade = 0
         for char in string:
             if char != " ":
-                grade += grading_scale[index[char][0]][index[char][1]]
+                grade += self.grading_scale[index[char][0]][index[char][1]]
         return grade
+
+    def consecutive_finger_usage(self, layout):
+        consecutive_finger = [0, 0, 0, 0, 0, 0, 0, 0]
+        pre_col = None
+        cur_col = None
+        index = self.get_index(layout)
+        words = self.text.split()
+        for word in words:
+            for letter in word:
+                cur_col = index[letter][1]
+                is_same = self.__is_same_finger(pre_col, cur_col)
+                if is_same is not False:
+                    consecutive_finger[is_same] += 1
+                pre_col = cur_col
+        return consecutive_finger
+
+    @staticmethod
+    def __is_same_finger(pre_col, cur_col):
+        if pre_col == 4:
+            pre_col = 3
+        if cur_col == 5:
+            cur_col = 6
+        if cur_col == pre_col:
+            if cur_col >= 6:
+                return cur_col - 2
+            else:
+                return cur_col
+        else:
+            return False
